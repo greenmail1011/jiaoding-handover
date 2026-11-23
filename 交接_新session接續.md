@@ -1,0 +1,39 @@
+# 交接：教定區壇辦班承接專案（新 session 接續用）
+
+更新日期：2026-11-23
+
+## 目標
+Harry（無人機足球教育）要承接 LINE 群組「教定區壇辦班」五位組長的工作：道務 林小慧、總務 曾小誠、教育 歐小慧、區中心 李小卿、志工輪值/除草 范小勇。（名字皆已遮名：中間字改「小」；2 字名＝首字＋小。）
+長期用法：之後 Harry 貼會議資料給 Claude，Claude 當「接手參謀」、依過往做法起草訊息，由 Harry 自己貼到 LINE（Claude 不能直接發 LINE）。
+
+## 鐵則（務必遵守）
+- Repo 是公開的：姓名一律遮名。
+- 「接龍」內容不可當作回答依據。
+- 不要推原始 LINE txt 與 `分析資料/` 資料夾。
+- 不再用 ElevenLabs 語音（花費）；只保留語音輸入，朗讀已移除。
+- 花費前先告知。
+- Commit 結尾需附：
+  Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+  Claude-Session: https://claude.ai/code/session_01Q3ebcZUSNkarpqkNezKdKH
+
+## 目前成果
+- GitHub：https://github.com/greenmail1011/jiaoding-handover（main，最新 commit 6703b50）
+  - `index.html`：單檔網頁（約 0.92MB），三個分頁：🏢 辦公室（3D，預設）／💬 問答／📊 分析。
+  - `承接手冊_做法版.md`：含第七章（2017–2022 補充）。
+  - `README.md`。
+- 辦公室 3D：亮色系、Q 版人物，會坐著、走動、倒水/找資料/白板/影印/討論/聊天、定時全員開會。
+  - 版面：直長形。經理周小順坐在後牆匾額下、面向大家；右排（前到後）區中心、總務、志工，左排道務、教育，全員面朝經理。
+  - 點角色在辦公室內開對話面板（不跳分頁），回答時角色留在座位比手勢。
+  - 預設視角從入口看（看到背面），可拖曳旋轉。
+- 資料：手機匯出聊天（2017-10-07～2026-11-23）已納入手冊第七章與問答；問答共 林9/曾12/歐9/李9/范5 則。
+
+## 建置方式（暫存環境可能已消失）
+- 原始碼在 `/tmp/w/`：`build.py`（產生 index.html）、`office.js`（3D 場景）、`index_before3d.html`（問答/分析基底）；測試 `t3/t4/t5.py`（Playwright + swiftshader）。
+- 若 /tmp/w 已不在：直接改 repo 內 `index.html`，或請 Claude 從 index.html 反推；`office.js` 的副本在 `/mnt/user-data/outputs/pub2/`（若仍存在）。
+
+## 待辦（皆未要求，先確認再做）
+1. 分析分頁（人物卡、圖表）仍只涵蓋 2022-12 起，可重算納入 2017–2022。
+2. Project 文件 `claude/承接手冊_做法版_教定區壇辦班.md` 仍是舊版（未遮名、含接龍內容），建議用 repo 版本取代。
+3. 記憶檔 `areas/jiaoding-handover.md` 尚未更新 2017 資料與 3D 辦公室。
+4. 經理「周小順」為依規則遮名的寫法，實際姓名待 Harry 確認。
+5. 「接手參謀」流程、提醒排程、GitHub Pages 公開網址（皆未開始）。
