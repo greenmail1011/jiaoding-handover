@@ -84,13 +84,22 @@ li{margin:6px 0}
 #lg{position:absolute;left:0;right:0;bottom:0;display:flex;gap:8px;overflow-x:auto;padding:10px 12px;background:linear-gradient(transparent,rgba(255,246,232,.95) 40%)}
 .lgb{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);cursor:pointer;font-size:15px;text-align:left}
 .lgb span{display:flex;flex-direction:column;line-height:1.25}.lgb small{color:var(--sub);font-size:12px}
+#opanel{display:none;position:absolute;right:12px;top:64px;bottom:78px;width:min(430px,calc(100% - 24px));background:var(--bg);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.18);z-index:8;flex-direction:column;overflow:hidden}
+#opanel.on{display:flex}
+#opanel .ph{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line);background:#fff;font-size:14px;color:var(--sub)}
+#opanel .ph button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;font-size:15px;cursor:pointer;color:var(--ink)}
+#opanel.L{right:auto;left:12px}
+#opanel .inrow{background:var(--bg);padding:8px 0 4px;margin-top:0;bottom:0}
+#opanel .pb{padding-bottom:0!important}
+#opanel .pb{flex:1;overflow:auto;padding:4px 14px 12px}
+@media (max-width:700px){#opanel{left:8px;right:8px;width:auto;top:auto;height:60%;bottom:70px}}
 #tip{display:none;position:absolute;z-index:5;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.12);pointer-events:none}
 #tip small{color:var(--sub)}
 </style>
 </head>
 <body>
 <div id="tabs"><button class="on" data-t="of">🏢 辦公室</button><button data-t="qa">💬 問答</button><button data-t="an">📊 分析</button></div>
-<div id="of"><div id="of3d"></div><div class="hudt">拖曳旋轉・滾輪或雙指縮放・點角色問他過去怎麼做</div><div class="zoom"><button id="pl" title="看後排">▲</button><button id="pr" title="看前排">▼</button><button id="zin" title="拉近">＋</button><button id="zout" title="拉遠">－</button><button id="zrs" title="回到預設視角">⟲</button></div><div id="lg"></div><div id="tip"></div></div>
+<div id="of"><div id="of3d"></div><div class="hudt">拖曳旋轉・滾輪或雙指縮放・點角色問他過去怎麼做</div><div class="zoom"><button id="pl" title="看後排">▲</button><button id="pr" title="看前排">▼</button><button id="zin" title="拉近">＋</button><button id="zout" title="拉遠">－</button><button id="zrs" title="回到預設視角">⟲</button></div><div id="opanel"><div class="ph"><span>正在問：<b id="opn"></b></span><button id="opx">✕ 關閉</button></div><div class="pb" id="opb"></div></div><div id="lg"></div><div id="tip"></div></div>
 <main id="qa" style="display:none">
 <h1>教定區承接問答</h1>
 <input id="q" class="search" placeholder="想問什麼？打字找，例如：便當、割草、獎學金" autocomplete="off">
@@ -673,6 +682,7 @@ function ask(i,text,jForce){
 document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{
   document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x===b));
   const t=b.dataset.t;
+  closeChat();
   document.getElementById("of").style.display=t==="of"?"block":"none";
   document.getElementById("qa").style.display=t==="qa"?"":"none";
   document.getElementById("an").style.display=t==="an"?"block":"none";
@@ -680,6 +690,30 @@ document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{
 });
 function openPerson(i){document.querySelector('#tabs button[data-t="qa"]').click();chat(i);window.scrollTo(0,0)}
 window.openPerson=openPerson;
+let openedI=null;
+function openChat(i){
+  const panel=document.getElementById("opanel");
+  if(panel.classList.contains("on")&&openedI===i)return;
+  openedI=i;
+  document.getElementById("opb").appendChild(view);
+  panel.classList.add("on");
+  panel.classList.toggle("L",[1,3,4].includes(i));
+  document.getElementById("opn").textContent=D[i].n+"（"+D[i].r+"）";
+  chat(i);
+  if(window.__office)__office.talk(i);
+}
+function closeChat(){
+  const panel=document.getElementById("opanel");
+  if(!panel.classList.contains("on"))return;
+  panel.classList.remove("on");openedI=null;
+  const qa=document.getElementById("qa");
+  qa.insertBefore(view,qa.querySelector(".hint"));
+  cur=null;q.value="";home();
+  if(window.__office)__office.talk(null);
+}
+window.openChat=openChat;window.closeChat=closeChat;
+document.getElementById("opx").onclick=closeChat;
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeChat()});
 
 home();
 </script>
@@ -941,9 +975,9 @@ Person.prototype.pickAct=function(){
 
 Person.prototype.update=function(dt,time){
   var s=this.state,walk=0;
-  if(s==="sit"){this.sit=Math.min(1,this.sit+dt*2.5);this.armMode="type";this.text="坐著工作中";
+  if(s==="sit"){this.sit=Math.min(1,this.sit+dt*2.5);this.armMode=this.hold?"talk":"type";this.text=this.hold?"正在回答你的問題":"坐著工作中";
     this.pos.x=this.seat.x;this.pos.z=this.seat.z;turn(this,0,dt);
-    this.t-=dt;if(this.t<=0||(meeting.on&&!this.mtg))this.state="stand"}
+    if(!this.hold){this.t-=dt;if(this.t<=0||(meeting.on&&!this.mtg))this.state="stand"}}
   else if(s==="stand"){this.sit=Math.max(0,this.sit-dt*2.2);this.armMode="idle";this.text="站起來";
     var k=this.sit;this.pos.x=lerp(this.stand.x,this.seat.x,k);this.pos.z=lerp(this.stand.z,this.seat.z,k);
     if(k===0){this.act=this.pickAct();this.path=findPath([this.stand.x,this.stand.z],this.act.pos);this.state="walk";this.after="act"}}
@@ -957,7 +991,7 @@ Person.prototype.update=function(dt,time){
       if(dist<.05)this.path.shift();else{this.pos.x+=dx/dist*step;this.pos.z+=dz/dist*step}}}
   else if(s==="act"){this.armMode=this.act.arm;this.text=this.act.a||this.act.t;
     var ok=turn(this,Math.atan2(this.act.f[0]-this.pos.x,this.act.f[1]-this.pos.z),dt,6);
-    this.t-=dt;if(this.t<=0&&!(meeting.on&&this.act.n==="開會")){this.path=findPath([this.pos.x,this.pos.z],[this.stand.x,this.stand.z]);this.state="back";this.after="sit"}
+    if(this.hold)this.t=Math.min(this.t,.3);this.t-=dt;if(this.t<=0&&!(meeting.on&&this.act.n==="開會")){this.path=findPath([this.pos.x,this.pos.z],[this.stand.x,this.stand.z]);this.state="back";this.after="sit"}
     if(meeting.on&&this.act.n==="開會"&&meeting.left<=0){this.path=findPath([this.pos.x,this.pos.z],[this.stand.x,this.stand.z]);this.state="back";this.after="sit"}}
   else if(s==="sitdown"){this.armMode="idle";this.text="坐回座位";
     this.rot=wrap(this.rot);var done=turn(this,0,dt,8);
@@ -997,7 +1031,7 @@ el.addEventListener("pointermove",function(e){
     if(moved>6){cs.az-=dx*.006;cs.pol-=dy*.005;camUpdate()}drag={x:e.clientX,y:e.clientY}}
   else if(!drag)hover(e)});
 el.addEventListener("pointerup",function(e){delete pointers[e.pointerId];
-  if(drag&&moved<=6){var i=pick(e);if(i!==null)window.openPerson(i)}drag=null});
+  if(drag&&moved<=6){var i=pick(e);if(i!==null)(window.openChat||window.openPerson)(i)}drag=null});
 el.addEventListener("pointercancel",function(e){delete pointers[e.pointerId];drag=null});
 el.addEventListener("pointerleave",function(){tip.style.display="none"});
 el.addEventListener("wheel",function(e){e.preventDefault();cs.r*=e.deltaY>0?1.08:.93;camUpdate()},{passive:false});
@@ -1024,7 +1058,7 @@ document.getElementById("zrs").onclick=function(){cs.az=0;cs.pol=.95;cs.r=20;cs.
 var lg=document.getElementById("lg");
 people.forEach(function(p,i){var b=document.createElement("button");b.className="lgb";
   b.innerHTML=av(i,34)+"<span><b>"+D[i].n+"</b><small id='st"+i+"'>坐著工作中</small></span>";
-  b.onclick=function(){window.openPerson(i)};lg.appendChild(b)});
+  b.onclick=function(){(window.openChat||window.openPerson)(i)};lg.appendChild(b)});
 var stTimer=0;
 
 /* ---------- 迴圈 ---------- */
@@ -1042,7 +1076,8 @@ function loop(now){
   stTimer+=dt;if(stTimer>.6){stTimer=0;people.forEach(function(p,i){var e=document.getElementById("st"+i);if(e)e.textContent=p.text})}
   renderer.render(scene,cam)}
 resize();camUpdate();requestAnimationFrame(loop);
-window.__office={people:people,meeting:meeting,cs:cs,cam:cam,camUpdate:camUpdate};
+function talk(i){people.forEach(function(p){p.hold=false});if(i!==null&&people[i])people[i].hold=true}
+window.__office={talk:talk,people:people,meeting:meeting,cs:cs,cam:cam,camUpdate:camUpdate};
 })();
 
 </script>
