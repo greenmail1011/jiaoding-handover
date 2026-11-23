@@ -805,20 +805,20 @@ function plant(x,z,s){var p=new T.Group();p.position.set(x,0,z);scene.add(p);
 plant(XL+.6,ZB+.6,1.2);plant(XR-.6,ZB+.6,1.2);plant(XR-.6,-11+.0+2.8,.9);
 
 /* ---------- 桌椅：右排（區中心、總務、志工）、左排（道務、教育）、經理在最前面 ---------- */
-var DESKS=[{x:-3.4,z:-3.0},{x:3.4,z:-4.8},{x:-3.4,z:-6.6},{x:3.4,z:-1.2},{x:3.4,z:-8.4}];   // 依 D 的順序：道務、總務、教育、區中心、志工
+var DESKS=[{x:-3.4,z:-6.6},{x:3.4,z:-4.8},{x:-3.4,z:-3.0},{x:3.4,z:-8.4},{x:3.4,z:-1.2}];   // 依 D 的順序：道務(綠椅)、總務(藍椅)、教育(粉紅椅)、區中心(紫椅)、志工(橘椅)
 var STAND_DX=[1.7,-1.7,1.7,-1.7,-1.7];
-var CCOL=[0xf687b3,0x63b3ed,0x68d391,0xf6ad55,0xb794f4];
+var CCOL=[0x68d391,0x63b3ed,0xf687b3,0xb794f4,0xf6ad55];
 DESKS.forEach(function(d,i){
   box(2.2,.1,1.15,0xf6dcae,d.x,.9,d.z);
   box(.1,.85,1,0xe3c28d,d.x-1.0,.45,d.z);box(.1,.85,1,0xe3c28d,d.x+1.0,.45,d.z);
-  box(1,.62,.06,0x2d3748,d.x,1.52,d.z-.3);
-  box(.9,.5,.02,0x90cdf4,d.x,1.52,d.z-.265,null,{emissive:0x63b3ed,emissiveIntensity:.5});
-  box(.12,.3,.12,0x718096,d.x,1.08,d.z-.3);
-  box(.7,.03,.25,0xffffff,d.x,.97,d.z+.2);
-  cyl(.1,.1,.16,[0xe53e3e,0x4299e1,0x48bb78,0xed8936,0x9f7aea][i],d.x+.8,1.03,d.z-.1);
-  box(.36,.02,.28,0xffffff,d.x-.75,.96,d.z-.15);
-  var cz=d.z+1.05;
-  box(.85,.12,.85,CCOL[i],d.x,.4,cz);box(.85,.85,.1,CCOL[i],d.x,.9,cz+.42);
+  box(1,.62,.06,0x2d3748,d.x,1.52,d.z+.3);
+  box(.9,.5,.02,0x90cdf4,d.x,1.52,d.z+.265,null,{emissive:0x63b3ed,emissiveIntensity:.5});
+  box(.12,.3,.12,0x718096,d.x,1.08,d.z+.3);
+  box(.7,.03,.25,0xffffff,d.x,.97,d.z-.2);
+  cyl(.1,.1,.16,[0xe53e3e,0x4299e1,0x48bb78,0xed8936,0x9f7aea][i],d.x+.8,1.03,d.z+.1);
+  box(.36,.02,.28,0xffffff,d.x-.75,.96,d.z+.15);
+  var cz=d.z-1.05;
+  box(.85,.12,.85,CCOL[i],d.x,.4,cz);box(.85,.85,.1,CCOL[i],d.x,.9,cz-.42);
   cyl(.06,.06,.35,0x718096,d.x,.2,cz);cyl(.4,.4,.05,0x718096,d.x,.04,cz,null,5);
 });
 // 經理座位（後牆匾額下方，面向大家）
@@ -836,7 +836,7 @@ DESKS.forEach(function(d,i){
 var GX0=-5.8,GX1=5.8,GZ0=-11.8,GZ1=3.4,CS=.4;
 var NX=Math.ceil((GX1-GX0)/CS),NZ=Math.ceil((GZ1-GZ0)/CS);
 var OBS=[];
-DESKS.forEach(function(d){OBS.push([d.x-1.25,d.x+1.25,d.z-.85,d.z+.8])});
+DESKS.forEach(function(d){OBS.push([d.x-1.25,d.x+1.25,d.z-.8,d.z+.8])});
 OBS.push([-1.45,1.45,-11.2,-9.4]);          // 經理桌
 OBS.push([-6.2,-5.0,-11.8,-8.2]);       // 書櫃
 OBS.push([-6.2,-4.8,.4,2.3]);           // 影印機
@@ -920,9 +920,9 @@ function Person(i,opts){
   this.prop=pr;
   var lb=label(p.n,p.r,a.cloth);g.add(lb);this.lb=lb;
   // 位置
-  var d=opts?{x:0,z:-12.35}:DESKS[i];this.seat={x:d.x,z:d.z+1.05};this.stand={x:d.x+(opts?0:STAND_DX[i]),z:d.z+1.05};
-  this.sit=1;this.state="sit";this.t=rnd(2+i*2.2,8+i*2.5);this.path=[];this.act=null;this.ph=rnd(0,6);
-  this.rot=opts?0:Math.PI;this.pos={x:this.seat.x,z:this.seat.z};this.text="坐著工作中";this.armMode="type";this.after=null;
+  var d=opts?{x:0,z:-12.35}:DESKS[i];this.seat={x:d.x,z:d.z+(opts?1.05:-1.05)};this.stand={x:d.x+(opts?0:STAND_DX[i]),z:d.z+(opts?1.05:-1.05)};
+  this.sit=1;this.state="sit";this.t=rnd(25+i*8,60+i*10);this.path=[];this.act=null;this.ph=rnd(0,6);
+  this.rot=0;this.pos={x:this.seat.x,z:this.seat.z};this.text="坐著工作中";this.armMode="type";this.after=null;
   this.apply(0,0)}
 
 Person.prototype.apply=function(time,walkAmt){
@@ -969,14 +969,14 @@ mgr.text='經理';mgr.armMode='type';
 Person.prototype.pickAct=function(){
   var self=this;
   if(meeting.on&&!this.mtg){this.mtg=true;var slot=meeting.slots[this.i];return {n:"開會",t:"去經理桌前開會",a:"在經理桌前開會",pos:slot,f:[0,-10.2],arm:"talk",dur:[meeting.left,meeting.left]}}
-  if(Math.random()<.3){var o;do{o=people[(Math.random()*people.length)|0]}while(o===this);
-    var dd=DESKS[o.i];return {n:"找人",t:"去找"+D[o.i].n+"聊聊",a:"在跟"+D[o.i].n+"聊天",pos:[o.stand.x,o.stand.z+.2],f:[o.seat.x,o.seat.z],arm:"wave",dur:[3,5],visit:o}}
+  if(Math.random()<.15){var o;do{o=people[(Math.random()*people.length)|0]}while(o===this);
+    var dd=DESKS[o.i];return {n:"找人",t:"去找"+D[o.i].n+"聊聊",a:"在跟"+D[o.i].n+"聊天",pos:[o.stand.x,o.stand.z-.2],f:[o.seat.x,o.seat.z],arm:"wave",dur:[3,5],visit:o}}
   return ACTS[(Math.random()*ACTS.length)|0]};
 
 Person.prototype.update=function(dt,time){
   var s=this.state,walk=0;
   if(s==="sit"){this.sit=Math.min(1,this.sit+dt*2.5);this.armMode=this.hold?"talk":"type";this.text=this.hold?"正在回答你的問題":"坐著工作中";
-    this.pos.x=this.seat.x;this.pos.z=this.seat.z;turn(this,Math.PI,dt);
+    this.pos.x=this.seat.x;this.pos.z=this.seat.z;turn(this,0,dt);
     if(!this.hold){this.t-=dt;if(this.t<=0||(meeting.on&&!this.mtg))this.state="stand"}}
   else if(s==="stand"){this.sit=Math.max(0,this.sit-dt*2.2);this.armMode="idle";this.text="站起來";
     var k=this.sit;this.pos.x=lerp(this.stand.x,this.seat.x,k);this.pos.z=lerp(this.stand.z,this.seat.z,k);
@@ -994,14 +994,14 @@ Person.prototype.update=function(dt,time){
     if(this.hold)this.t=Math.min(this.t,.3);this.t-=dt;if(this.t<=0&&!(meeting.on&&this.act.n==="開會")){this.path=findPath([this.pos.x,this.pos.z],[this.stand.x,this.stand.z]);this.state="back";this.after="sit"}
     if(meeting.on&&this.act.n==="開會"&&meeting.left<=0){this.path=findPath([this.pos.x,this.pos.z],[this.stand.x,this.stand.z]);this.state="back";this.after="sit"}}
   else if(s==="sitdown"){this.armMode="idle";this.text="坐回座位";
-    this.rot=wrap(this.rot);var done=turn(this,Math.PI,dt,8);
+    this.rot=wrap(this.rot);var done=turn(this,0,dt,8);
     this.sit=Math.min(1,this.sit+dt*2.2);var kk=this.sit;
     this.pos.x=lerp(this.stand.x,this.seat.x,kk);this.pos.z=lerp(this.stand.z,this.seat.z,kk);
-    if(kk>=1){this.state="sit";this.t=rnd(9,18)}}
+    if(kk>=1){this.state="sit";this.t=rnd(45,100)}}
   this.apply(time,walk)};
 
 /* 全員開會 */
-var meeting={on:false,fresh:false,left:0,next:rnd(40,60),slots:[]};
+var meeting={on:false,fresh:false,left:0,next:rnd(120,180),slots:[]};
 (function(){var c=[0,1],r=2.3;for(var i=0;i<5;i++){var a=Math.PI*(.15+i*.34);meeting.slots.push([c[0]+Math.cos(a+3.5)*r,c[1]+Math.sin(a+3.5)*r])}})();
 meeting.slots=[[-1.8,-8.4],[-.6,-8.7],[.6,-8.7],[1.8,-8.4],[0,-7.5]];
 function meetingTick(dt){
@@ -1009,7 +1009,7 @@ function meetingTick(dt){
   if(!meeting.on){meeting.next-=dt;if(meeting.next<=0){meeting.on=true;meeting.fresh=true;meeting.left=10;meeting.age=0;people.forEach(function(p){p.mtg=false})}}
   else{var allThere=people.every(function(p){return p.state==="act"&&p.act&&p.act.n==="開會"});
     meeting.age+=dt;if(allThere)meeting.left-=dt;
-    if(meeting.left<=0||meeting.age>60){meeting.on=false;meeting.next=rnd(60,90)}}}
+    if(meeting.left<=0||meeting.age>60){meeting.on=false;meeting.next=rnd(240,360)}}}
 
 /* ---------- 相機（拖曳旋轉／縮放） ---------- */
 var cs={az:0,pol:.95,r:20,tx:0,ty:.6,tz:-4.6};
