@@ -621,9 +621,10 @@ function setupMic(i){
   };
 }
 function personList(i){chat(i)}
-function norm(t){return t.replace(/[\s，。？！、,.?!「」（）()]/g,"")}
+function norm(t){t=t.replace(/除草|割草機|除雜草/g,"割草");return t.replace(/[\s，。？！、,.?!「」（）()]/g,"")}
 function grams(t){const r=new Set();t=norm(t);for(let k=0;k<t.length-1;k++)r.add(t.slice(k,k+2));return r}
 function score(text,t){
+  text=text.replace(/除草|割草機|除雜草/g,"割草");
   const g=grams(text);let sc=0;
   (t.t+" "+t.k).split(/\s+/).forEach(w=>{if(w&&text.includes(w))sc+=3+w.length});
   const tg=grams(t.t+t.k+t.s.join(""));
@@ -679,12 +680,11 @@ function ask(i,text,jForce){
     let html;
     const mm=text.match(/(\d{1,2})\s*月/);
     if(jForce!==undefined){html=replyHTML(i,jForce)}
+    else if(best(text,i)){const o=best(text,i);html=replyHTML(o.i,o.j)}
     else if(mm||/這個月|本月|現在/.test(text)){
       const m=mm?+mm[1]:new Date().getMonth()+1;
       const x=D[i].month[m];
       html=x?m+" 月，過去我會做：<b>"+esc(x)+"</b>。想看做法就點上面的項目。":m+" 月在紀錄裡我沒有固定的工作。";
-      const others=D.map((p,k)=>({p,k})).filter(o=>o.k!==i&&o.p.month[m]);
-      if(others.length)html+="<div class='label'>同月別人在做：</div>"+others.map(o=>esc(o.p.n)+"："+esc(o.p.month[m])).join("<br>");
     } else {
       const own=best(text,i);
       if(own)html=replyHTML(own.i,own.j);
