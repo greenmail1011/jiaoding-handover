@@ -771,7 +771,7 @@ function plant(x,z,s){var p=new T.Group();p.position.set(x,0,z);scene.add(p);
 plant(XL+.6,ZB+.6,1.2);plant(XR-.6,ZB+.6,1.2);plant(XR-.6,-11+.0+2.8,.9);
 
 /* ---------- 桌椅：右排（區中心、總務、志工）、左排（道務、教育）、經理在最前面 ---------- */
-var DESKS=[{x:-3.4,z:-2.4},{x:3.4,z:-6},{x:-3.4,z:-6},{x:3.4,z:-2.4},{x:3.4,z:-9.6}];   // 依 D 的順序：道務、總務、教育、區中心、志工
+var DESKS=[{x:-3.4,z:-6.6},{x:3.4,z:-4.8},{x:-3.4,z:-3.0},{x:3.4,z:-8.4},{x:3.4,z:-1.2}];   // 依 D 的順序：道務、總務、教育、區中心、志工
 var STAND_DX=[1.7,-1.7,1.7,-1.7,-1.7];
 var CCOL=[0xf687b3,0x63b3ed,0x68d391,0xf6ad55,0xb794f4];
 DESKS.forEach(function(d,i){
@@ -969,7 +969,7 @@ Person.prototype.update=function(dt,time){
 /* 全員開會 */
 var meeting={on:false,fresh:false,left:0,next:rnd(40,60),slots:[]};
 (function(){var c=[0,1],r=2.3;for(var i=0;i<5;i++){var a=Math.PI*(.15+i*.34);meeting.slots.push([c[0]+Math.cos(a+3.5)*r,c[1]+Math.sin(a+3.5)*r])}})();
-meeting.slots=[[-2.4,-.7],[-.9,-1.5],[.9,-1.5],[2.4,-.7],[0,-2.4]];
+meeting.slots=[[-1.9,-.3],[-.8,-1.3],[.8,-1.3],[1.9,-.3],[0,-2.3]];
 function meetingTick(dt){
   meeting.fresh=false;
   if(!meeting.on){meeting.next-=dt;if(meeting.next<=0){meeting.on=true;meeting.fresh=true;meeting.left=10;meeting.age=0;people.forEach(function(p){p.mtg=false})}}
