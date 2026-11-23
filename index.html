@@ -845,6 +845,7 @@ var GX0=-5.8,GX1=5.8,GZ0=-11.8,GZ1=3.4,CS=.4;
 var NX=Math.ceil((GX1-GX0)/CS),NZ=Math.ceil((GZ1-GZ0)/CS);
 var OBS=[];
 OBS.push([-1.15,1.15,-8.0,-.4]);   // 大長桌
+DESKS.forEach(function(d){OBS.push([d.x-.5,d.x+.5,d.z-.5,d.z+.5])});   // 椅子
 OBS.push([-1.45,1.45,-11.2,-9.4]);          // 經理桌
 OBS.push([-6.2,-5.0,-11.8,-8.2]);       // 書櫃
 OBS.push([-6.2,-4.8,.4,2.3]);           // 影印機
@@ -853,7 +854,7 @@ OBS.push([-6.2,-4.9,-12.2,-10.9]);OBS.push([4.9,6.2,-12.2,-10.9]);
 var grid=new Uint8Array(NX*NZ);
 for(var gx=0;gx<NX;gx++)for(var gz=0;gz<NZ;gz++){
   var x=GX0+(gx+.5)*CS,z=GZ0+(gz+.5)*CS,bad=0;
-  for(var k=0;k<OBS.length;k++){var o=OBS[k];if(x>o[0]&&x<o[1]&&z>o[2]&&z<o[3]){bad=1;break}}
+  for(var k=0;k<OBS.length;k++){var o=OBS[k];if(x>o[0]-.22&&x<o[1]+.22&&z>o[2]-.22&&z<o[3]+.22){bad=1;break}}
   grid[gx*NZ+gz]=bad}
 function cellOf(x,z){return [Math.max(0,Math.min(NX-1,Math.floor((x-GX0)/CS))),Math.max(0,Math.min(NZ-1,Math.floor((z-GZ0)/CS)))]}
 function free(x,z){var c=cellOf(x,z);return !grid[c[0]*NZ+c[1]]}
@@ -1014,6 +1015,25 @@ Person.prototype.update=function(dt,time){
 var meeting={on:false,fresh:false,left:0,next:rnd(120,180),slots:[]};
 (function(){var c=[0,1],r=2.3;for(var i=0;i<5;i++){var a=Math.PI*(.15+i*.34);meeting.slots.push([c[0]+Math.cos(a+3.5)*r,c[1]+Math.sin(a+3.5)*r])}})();
 meeting.slots=[[-1.8,-8.5],[-.6,-8.9],[.6,-8.9],[1.8,-8.5],[0,-8.3]];
+/* 人與人不能穿過彼此：互相推開，且不會被推進家具裡 */
+function separate(){
+  var R=.72;
+  for(var it=0;it<2;it++)for(var a=0;a<people.length;a++)for(var b=a+1;b<people.length;b++){
+    var p=people[a],q=people[b];
+    var dx=q.pos.x-p.pos.x,dz=q.pos.z-p.pos.z,d=Math.hypot(dx,dz);
+    if(d>=R)continue;
+    if(d<.001){dx=(a%2?1:-1);dz=.3;d=Math.hypot(dx,dz)}
+    var push=(R-d)/2,ux=dx/d,uz=dz/d;
+    var pSit=p.state==="sit"&&p.sit>=1,qSit=q.state==="sit"&&q.sit>=1;
+    if(pSit&&qSit)continue;
+    var wp=pSit?0:(qSit?1:.5),wq=qSit?0:(pSit?1:.5);
+    nudge(p,-ux*push*2*wp,-uz*push*2*wp);nudge(q,ux*push*2*wq,uz*push*2*wq)}}
+function nudge(p,dx,dz){
+  if(!dx&&!dz)return;
+  var nx=p.pos.x+dx,nz=p.pos.z+dz;
+  if(free(nx,nz)){p.pos.x=nx;p.pos.z=nz}
+  else if(free(nx,p.pos.z)){p.pos.x=nx}
+  else if(free(p.pos.x,nz)){p.pos.z=nz}}
 function meetingTick(dt){
   meeting.fresh=false;
   if(!meeting.on){meeting.next-=dt;if(meeting.next<=0){meeting.on=true;meeting.fresh=true;meeting.left=10;meeting.age=0;people.forEach(function(p){p.mtg=false})}}
@@ -1082,7 +1102,7 @@ function loop(now){
   var dt=Math.min(.05,(now-last)/1000);last=now;
   if(!host.offsetParent||document.hidden)return;
   clock+=dt;meetingTick(dt);
-  people.forEach(function(p){p.update(dt,clock)});mgr.armMode=(Math.floor(clock/7)%2)?'talk':'type';mgr.apply(clock,0);
+  people.forEach(function(p){p.update(dt,clock)});separate();mgr.armMode=(Math.floor(clock/7)%2)?'talk':'type';mgr.apply(clock,0);
   stTimer+=dt;if(stTimer>.6){stTimer=0;people.forEach(function(p,i){var e=document.getElementById("st"+i);if(e)e.textContent=p.text})}
   renderer.render(scene,cam)}
 resize();camUpdate();requestAnimationFrame(loop);
