@@ -884,6 +884,7 @@ function Person(i,opts){
   // 軀幹
   var torso=new T.Mesh(new T.CapsuleGeometry(.29,.28,6,16),M(cloth));torso.position.y=.82;torso.castShadow=true;g.add(torso);
   var belt=cyl(.3,.3,.07,0x4a5568,0,.5,0,g);belt.scale.set(1,1,.9);
+  if(a.suit){box(.26,.46,.03,0xffffff,0,.92,.285,g);box(.09,.42,.03,0x1d2027,0,.88,.305,g);box(.14,.1,.03,0x1d2027,0,1.12,.3,g)}
   // 頭
   var head=this.head=new T.Group();head.position.y=1.62;g.add(head);
   var hm=new T.Mesh(new T.SphereGeometry(.5,32,22),M(a.skin,{roughness:.7}));hm.scale.set(1.04,.96,1);hm.castShadow=true;head.add(hm);
@@ -891,6 +892,7 @@ function Person(i,opts){
   eye(-.18);eye(.18);
   [-.31,.31].forEach(function(x){var b=sph(.08,0xff9aa2,x,-.12,.42,head,{transparent:true,opacity:.65},1,.6,.35)});
   var mouth=new T.Mesh(new T.TorusGeometry(.07,.017,8,16,Math.PI),M(0x7a3b2a));mouth.position.set(0,-.14,.5);mouth.rotation.z=Math.PI;head.add(mouth);
+  if(a.suit){box(.2,.045,.03,0xffffff,0,-.115,.5,head)}
   if(a.glasses){[-.18,.18].forEach(function(x){var r=new T.Mesh(new T.TorusGeometry(.13,.02,8,20),M(0x2d3748));r.position.set(x,.03,.5);head.add(r)});box(.1,.02,.02,0x2d3748,0,.04,.52,head)}
   // 髮型
   var hm2=M(hair,{roughness:.6});
@@ -964,7 +966,7 @@ var ACTS=[
 var people=[];
 for(var pi=0;pi<D.length&&pi<5;pi++)people.push(new Person(pi));
 
-var mgr=new Person(0,{av:{skin:'#f1c7a0',cloth:'#2f3e5c',hair:'#a0a4aa',style:'part',prop:'none',glasses:1},p:{n:'周小順',r:'經理'}});
+var mgr=new Person(0,{av:{skin:'#f3c9a0',cloth:'#2f3440',hair:'#23232b',style:'part',prop:'none',glasses:1,suit:1},p:{n:'周小順',r:'經理'}});
 mgr.text='經理';mgr.armMode='type';
 Person.prototype.pickAct=function(){
   var self=this;
