@@ -85,6 +85,11 @@ li{margin:6px 0}
 #of3d{position:absolute;inset:0}
 #of .hudt{position:absolute;left:12px;top:10px;background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:14px;color:var(--sub);pointer-events:none;max-width:58%}
 #of .zoom{position:absolute;right:12px;top:10px;display:flex;gap:6px}
+#kp{position:absolute;right:12px;top:58px;z-index:60;width:230px;background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 6px 20px rgba(0,0,0,.15);font-size:14px}
+#kp input{width:100%;box-sizing:border-box;margin:8px 0;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:15px}
+#kp .kr{display:flex;gap:6px}#kp .kr button{flex:1;padding:7px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:14px}
+#kp #kok{background:#3b63a8;color:#fff;border-color:#3b63a8}#kmsg{margin-top:8px;font-size:13px;color:var(--sub);min-height:1em}
+#kb.on{background:#e6f6ea!important;border-color:#7cc58d!important}
 #of .zoom button{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.92);font-size:20px;cursor:pointer;color:var(--ink)}
 #lg{position:absolute;left:0;right:0;bottom:0;display:flex;gap:8px;overflow-x:auto;padding:10px 12px;background:linear-gradient(transparent,rgba(255,246,232,.95) 40%)}
 .lgb{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);cursor:pointer;font-size:15px;text-align:left}
@@ -107,7 +112,7 @@ li{margin:6px 0}
 </style>
 </head>
 <body>
-<div id="of"><div id="of3d"></div><div class="hudt">拖曳旋轉・滾輪或雙指縮放・點角色問他過去怎麼做</div><div class="zoom"><button id="pl" title="看後排">▲</button><button id="pr" title="看前排">▼</button><button id="zin" title="拉近">＋</button><button id="zout" title="拉遠">－</button><button id="zrs" title="回到預設視角">⟲</button></div><div id="opanel"><div class="ph"><span>正在問：<b id="opn"></b></span><button id="opx">✕ 關閉</button></div><div class="pb" id="opb"></div></div><div id="lg"></div><div id="tip"></div></div>
+<div id="of"><div id="of3d"></div><div class="hudt">拖曳旋轉・滾輪或雙指縮放・點角色問他過去怎麼做</div><div class="zoom"><button id="kb" title="輸入通關密語，啟用 AI 問答" style="display:none">🔑</button><button id="pl" title="看後排">▲</button><button id="pr" title="看前排">▼</button><button id="zin" title="拉近">＋</button><button id="zout" title="拉遠">－</button><button id="zrs" title="回到預設視角">⟲</button></div><div id="kp" style="display:none"><b>AI 問答通關密語</b><input id="kpw" type="password" placeholder="輸入密語" autocomplete="off"><div class="kr"><button id="kok">確定</button><button id="kclr">清除</button></div><div id="kmsg"></div></div><div id="opanel"><div class="ph"><span>正在問：<b id="opn"></b></span><button id="opx">✕ 關閉</button></div><div class="pb" id="opb"></div></div><div id="lg"></div><div id="tip"></div></div>
 <main id="qa" style="display:none">
 <h1>教定區承接問答</h1>
 <input id="q" class="search" placeholder="想問什麼？打字找，例如：便當、割草、獎學金" autocomplete="off">
@@ -469,22 +474,37 @@ let AIH=[];
 function lget(k){try{return localStorage.getItem(k)||""}catch(_){return ""}}
 function lset(k,v){try{localStorage.setItem(k,v)}catch(_){}}
 function aiHTML(t){return esc(t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/^\s*[-*•]\s+/gm,"• ").replace(/\n/g,"<br>")}
+function keyUI(){const kb=document.getElementById("kb");if(!kb)return;kb.classList.toggle("on",!!lget("jd-pass"));kb.textContent=lget("jd-pass")?"🔓":"🔑"}
+(function(){
+  if(!AI_URL)return;
+  const kb=document.getElementById("kb"),kp=document.getElementById("kp"),pw=document.getElementById("kpw"),msg=document.getElementById("kmsg");
+  kb.style.display="";keyUI();
+  kb.onclick=()=>{const open=kp.style.display==="none";kp.style.display=open?"block":"none";
+    msg.textContent=lget("jd-pass")?"已啟用 AI 問答。":"輸入後按確定，會先驗證。";if(open)pw.focus()};
+  document.getElementById("kclr").onclick=()=>{lset("jd-pass","");pw.value="";keyUI();msg.textContent="已清除，AI 問答停用。"};
+  const ok=()=>{const v=pw.value.trim();if(!v)return;msg.textContent="驗證中…";
+    fetch(AI_URL,{method:"POST",body:JSON.stringify({pass:v,q:""})}).then(r=>r.json()).then(j=>{
+      if(j&&j.err==="empty"){lset("jd-pass",v);pw.value="";keyUI();msg.textContent="✓ 已啟用 AI 問答";setTimeout(()=>{kp.style.display="none"},900)}
+      else if(j&&j.err==="auth")msg.textContent="密語不對，請再試一次。";
+      else msg.textContent="後端回應異常，請稍後再試。"}).catch(()=>{msg.textContent="連不上後端，請檢查網路。"})};
+  document.getElementById("kok").onclick=ok;
+  pw.addEventListener("keydown",e=>{if(e.key==="Enter")ok()});
+})();
 function aiAsk(i,text,wait){
   const done=()=>{const f=$("#face");f&&f.classList.replace("talk","bob")};
   const local=()=>{wait.remove();done();ask(i,text,undefined,true,true)};
   const pass=lget("jd-pass");
   if(!pass){
     wait.remove();done();
-    say(i,"要先輸入通關密語才能用 AI 問答（問 Harry 拿）。<div class='sw'><input id='pw' type='password' placeholder='通關密語' style='padding:6px;border:1px solid #ccc;border-radius:8px'> <button class='btn' id='pwb'>確定</button></div>");
-    setTimeout(()=>{const b=$("#pwb");if(b)b.onclick=()=>{const v=$("#pw").value.trim();if(v){lset("jd-pass",v);b.parentNode.parentNode.remove();ask(i,text,undefined,false,true)}}},0);
-    return;
+    say(i,"AI 問答要先在畫面右上角的 🔑 輸入通關密語。這次先用預寫答案回答。");
+    ask(i,text,undefined,true,true);return;
   }
   const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),30000);
   fetch(AI_URL,{method:"POST",signal:ctl.signal,body:JSON.stringify({pass:pass,q:text,role:D[i].n+"（"+D[i].r+"）",history:AIH})})
    .then(r=>r.json()).then(j=>{
      clearTimeout(to);
      if(j&&j.ok){AIH.push({r:"user",t:text},{r:"bot",t:j.a});AIH=AIH.slice(-8);wait.remove();say(i,aiHTML(j.a)+"<div class='sw' style='opacity:.6;font-size:12px'>AI 依手冊整理，細節請以當年公文為準。</div>");done()}
-     else if(j&&j.err==="auth"){lset("jd-pass","");wait.remove();done();say(i,"通關密語不對，請再問一次重新輸入。")}
+     else if(j&&j.err==="auth"){lset("jd-pass","");keyUI();wait.remove();done();say(i,"通關密語不對或已更換，請到右上角 🔑 重新輸入。這次先用預寫答案。");ask(i,text,undefined,true,true)}
      else if(j&&j.err==="limit"){wait.remove();done();say(i,"今天的 AI 問答次數用完了，先用預寫答案。");ask(i,text,undefined,true,true)}
      else local()})
    .catch(()=>{clearTimeout(to);local()});
