@@ -445,7 +445,7 @@ document.addEventListener("click",function(e){var b=e.target.closest&&e.target.c
 function exBox(t){if(!t.ex||!t.ex.length)return '';
   return '<div class="ex"><div class="exh">當時的範例（過去實際發過的訊息，人名與金額已隱藏，僅供參考；日期每年會變，以當年公文為準）</div>'+t.ex.map(e=>'<div class="tph"><span class="chip">'+esc(e.d)+'</span>'+cpBtn()+'</div><pre>'+esc(e.x)+'</pre>').join('')+'</div>'}
 function chat(i){
-  FILL=null;
+  FILL=null;AIH=[];
   cur=i;renderPeople();
   const p=D[i];
   view.innerHTML='<div class="chat"><div class="top"><span id="face" class="bob">'+av(i,84)+'</span><div><b>'+esc(p.n)+'</b>（'+esc(p.r)+'）<div class="bubble">問我過去怎麼做的，點下面或直接打字</div></div></div>'+
@@ -464,13 +464,39 @@ function say(i,html,talk){
   const box=$("#msgs");if(!box)return;
   const d=document.createElement("div");d.className="m bot";d.innerHTML=html;box.appendChild(d);d.scrollIntoView({block:"nearest",behavior:"smooth"});
 }
-function ask(i,text,jForce){
+const AI_URL="https://script.google.com/macros/s/AKfycbyun1U-1kJKOPdLoCEU8jyTvprsUGu-00QtXR-2GBaMLSz7b7QvLJwaUoIozqCbGGG-NQ/exec";   // 部署 Apps Script 後填入網頁應用程式網址；留空＝只用預寫答案
+let AIH=[];
+function lget(k){try{return localStorage.getItem(k)||""}catch(_){return ""}}
+function lset(k,v){try{localStorage.setItem(k,v)}catch(_){}}
+function aiHTML(t){return esc(t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/^\s*[-*•]\s+/gm,"• ").replace(/\n/g,"<br>")}
+function aiAsk(i,text,wait){
+  const done=()=>{const f=$("#face");f&&f.classList.replace("talk","bob")};
+  const local=()=>{wait.remove();done();ask(i,text,undefined,true,true)};
+  const pass=lget("jd-pass");
+  if(!pass){
+    wait.remove();done();
+    say(i,"要先輸入通關密語才能用 AI 問答（問 Harry 拿）。<div class='sw'><input id='pw' type='password' placeholder='通關密語' style='padding:6px;border:1px solid #ccc;border-radius:8px'> <button class='btn' id='pwb'>確定</button></div>");
+    setTimeout(()=>{const b=$("#pwb");if(b)b.onclick=()=>{const v=$("#pw").value.trim();if(v){lset("jd-pass",v);b.parentNode.parentNode.remove();ask(i,text,undefined,false,true)}}},0);
+    return;
+  }
+  const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),30000);
+  fetch(AI_URL,{method:"POST",signal:ctl.signal,body:JSON.stringify({pass:pass,q:text,role:D[i].n+"（"+D[i].r+"）",history:AIH})})
+   .then(r=>r.json()).then(j=>{
+     clearTimeout(to);
+     if(j&&j.ok){AIH.push({r:"user",t:text},{r:"bot",t:j.a});AIH=AIH.slice(-8);wait.remove();say(i,aiHTML(j.a)+"<div class='sw' style='opacity:.6;font-size:12px'>AI 依手冊整理，細節請以當年公文為準。</div>");done()}
+     else if(j&&j.err==="auth"){lset("jd-pass","");wait.remove();done();say(i,"通關密語不對，請再問一次重新輸入。")}
+     else if(j&&j.err==="limit"){wait.remove();done();say(i,"今天的 AI 問答次數用完了，先用預寫答案。");ask(i,text,undefined,true,true)}
+     else local()})
+   .catch(()=>{clearTimeout(to);local()});
+}
+function ask(i,text,jForce,noAI,noBubble){
   const box=$("#msgs");if(!box)return;
-  const me=document.createElement("div");me.className="m me";me.textContent=text;box.appendChild(me);
+  if(!noBubble){const me=document.createElement("div");me.className="m me";me.textContent=text;box.appendChild(me)}
   if(FILL){if(jForce===undefined){fillStep(text);return}FILL=null;fillUI()}
   const wait=document.createElement("div");wait.className="m bot";wait.innerHTML='<span class="dots"><span></span><span></span><span></span></span>';box.appendChild(wait);
   wait.scrollIntoView({block:"nearest",behavior:"smooth"});
   const face=$("#face");face&&face.classList.replace("bob","talk");
+  if(AI_URL&&!noAI&&jForce===undefined&&!/總覽|檔案|負責什麼|核心工作|固定節奏|常聯絡|聯絡誰|交接重點|做什麼的|這個月|本月|現在|\d{1,2}\s*月/.test(text)){aiAsk(i,text,wait);return}
   setTimeout(()=>{
     wait.remove();
     let html;
